@@ -129,7 +129,7 @@ module.exports = function(grunt) {
                      'build:debug', 'karma:server', 'connect:server', 'watch:test']);
 
   grunt.registerTask('server', "Run your server in development mode, auto-rebuilding when files change.",
-                     ['build:debug', 'connect:server', 'watch:main']);
+                     ['build:debug', 'connect:server', 'connect:api', 'watch:main']);
   grunt.registerTask('server:dist', "Build and preview production (minified) assets.",
                      ['build:dist', 'connect:dist:keepalive']);
 };
