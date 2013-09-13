@@ -1,0 +1,71 @@
+var get = Ember.get, isNone = Ember.isNone;
+
+var JsonApiSerializer = DS.RESTSerializer.extend({
+
+  /**
+   * Patch the extractSingle method, since there are no singular records
+   */
+  extractSingle: function(store, primaryType, payload, recordId, requestType) {
+    var primaryTypeName = primaryType.typeKey;
+    var json = {};
+    for(var key in payload) {
+      var typeName = Ember.String.singularize(key);
+      if(typeName == primaryTypeName && Ember.isArray(payload[key])) {
+        json[typeName] = payload[key][0];
+      } else {
+        json[key] == payload[key];
+      }
+    }
+    return this._super(store, primaryType, json, recordId, requestType);
+  },
+
+  /**
+   * Flatten links
+   */
+  normalize: function(type, hash, prop) {
+    var json = {};
+    for(var key in hash) {
+      if(key != 'links') {
+        json[key] = hash[key];
+      } else if(typeof hash[key] == 'object') {
+        for(var link in hash[key]) {
+          json[key] = hash[key][link];
+        }
+      }
+    }
+    return this._super(type, json, prop);
+  },
+
+  // SERIALIZATION
+
+  /**
+   * Use "links" key, remove support for polymorphic type
+   */
+  serializeBelongsTo: function(record, json, relationship) {
+    var key = relationship.key;
+
+    var belongsTo = get(record, key);
+
+    if (isNone(belongsTo)) { return; }
+
+    json.links = json.links || {};
+    json.links[key] = get(belongsTo, 'id');
+  },
+
+  /**
+   * Use "links" key
+   */
+  serializeHasMany: function(record, json, relationship) {
+    var key = relationship.key;
+
+    var relationshipType = DS.RelationshipChange.determineRelationshipType(record.constructor, relationship);
+
+    if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
+      json.links = json.links || {};
+      json.links[key] = get(record, key).mapBy('id');
+    }
+  }
+
+});
+
+export default JsonApiSerializer;

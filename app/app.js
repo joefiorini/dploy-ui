@@ -1,5 +1,7 @@
 import Resolver from 'resolver';
 import router from 'appkit/router';
+import Adapter from 'appkit/adapters/application';
+import config from 'appkit/config';
 
 var App = Ember.Application.create({
   LOG_ACTIVE_GENERATION: true,
@@ -10,5 +12,11 @@ var App = Ember.Application.create({
     router: router
   })
 });
+
+Adapter.reopen({
+  host: config.host
+});
+
+App.ApplicationAdapter = Adapter;
 
 export default App;
